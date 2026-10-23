@@ -182,21 +182,25 @@ switch ($a) {
 
     case 'save_settings':
         $changed = [];
-        foreach (['cafe_name', 'tagline', 'address', 'hours', 'facebook', 'site_url'] as $k) {
-            $v = trim((string)($_POST[$k] ?? ''));
-            if (in_array($k, ['facebook', 'site_url'], true) && $v !== '' && !preg_match('~^https?://[^\s<>"]+$~i', $v)) {
+        $keys = ['cafe_name', 'tagline', 'address', 'landmark', 'map_query', 'hours', 'phone', 'email', 'facebook', 'instagram', 'about_text', 'site_url'];
+        foreach ($keys as $k) {
+            $v = trim(str_replace("\r\n", "\n", (string)($_POST[$k] ?? '')));
+            if (in_array($k, ['facebook', 'instagram', 'site_url'], true) && $v !== '' && !preg_match('~^https?://[^\s<>"]+$~i', $v)) {
                 flash('Links must start with https://', 'bad'); redirect('settings.php');
+            }
+            if ($k === 'email' && $v !== '' && !filter_var($v, FILTER_VALIDATE_EMAIL)) {
+                flash('That email address does not look right.', 'bad'); redirect('settings.php');
             }
             if ($k === 'cafe_name' && $v === '') continue;
             if ($v !== setting($k)) { set_setting($k, $v); $changed[] = str_replace('_', ' ', $k); }
         }
-        foreach (['logo', 'cover'] as $k) {
+        foreach (['logo' => 'logo', 'hero' => 'home page photo', 'cover' => 'café photo'] as $k => $what) {
             if (empty($_FILES[$k]['name'])) continue;
             try {
                 $old = setting($k);
                 set_setting($k, save_upload($_FILES[$k]));
                 delete_photo($old);
-                $changed[] = $k === 'cover' ? 'header photo' : 'logo';
+                $changed[] = $what;
             } catch (RuntimeException $ex) {
                 flash($ex->getMessage(), 'bad'); redirect('settings.php');
             }

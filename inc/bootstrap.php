@@ -23,7 +23,7 @@ if (PHP_SAPI !== 'cli') {
     header('X-Frame-Options: DENY');
     header("Content-Security-Policy: default-src 'self'; img-src 'self' data: blob:; "
         . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; "
-        . "script-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; "
+        . "script-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; frame-src https://www.google.com; "
         . "frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
 }
 
@@ -74,6 +74,40 @@ function migrate(PDO $pdo): void
         $pdo->exec("UPDATE items SET featured = 1 WHERE name IN
             ('Matcha Crunch', 'Dirty Matcha', 'Strawberry Crunch', 'Café Latte', 'Hamburger Steak', 'Chocolate Drip Cake')");
         $pdo->exec('PRAGMA user_version = 2');
+        $pdo->commit();
+    }
+    if ($v < 3) {
+        // Full website: About and Visit pages. Empty values simply hide on the site.
+        $pdo->beginTransaction();
+        $st = $pdo->prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
+        foreach ([
+            'phone' => '',
+            'instagram' => '',
+            'map_query' => '', // what Google Maps searches for; falls back to the address
+            'hero' => 'seed-matcha-crunch.jpg', // home page photo
+            'about_text' => "Jaru Café is a neighbourhood café in Naga City.\n"
+                . "We serve coffee, matcha, non-coffee drinks, rice meals, pasta and cakes, made to order.",
+        ] as $k => $val) $st->execute([$k, $val]);
+        $pdo->exec('PRAGMA user_version = 3');
+        $pdo->commit();
+    }
+    if ($v < 4) {
+        // Real details from Jaru's Facebook page. Only fills a field that is still empty or
+        // still holds the old placeholder, so the owner's own edits are never overwritten.
+        $pdo->beginTransaction();
+        $pdo->exec("INSERT OR IGNORE INTO settings (key, value) VALUES ('email', ''), ('landmark', '')");
+        $st = $pdo->prepare("UPDATE settings SET value = ? WHERE key = ? AND (value = '' OR value = ?)");
+        foreach ([
+            'tagline' => ['A cozy escape in every cup and plate', 'Good drinks, brighter days'],
+            'address' => ['Maharlika Highway, Concepcion Pequeña, Naga City', 'Naga City, Camarines Sur'],
+            'landmark' => ['Beside Rosam, near SSS', ''],
+            'hours' => ["Sunday – Thursday: 10 AM – 10 PM\nFriday – Saturday: 10 AM – 11 PM", ''],
+            'phone' => ['0921 716 1921', ''],
+            'email' => ['jarumarucafe@gmail.com', ''],
+            'instagram' => ['https://www.instagram.com/jaru_cafe/', ''],
+            'map_query' => ['JARU Cafe, Concepcion Pequeña, Naga City', ''],
+        ] as $k => [$val, $placeholder]) $st->execute([$val, $k, $placeholder]);
+        $pdo->exec('PRAGMA user_version = 4');
         $pdo->commit();
     }
 }
@@ -345,7 +379,7 @@ function delete_photo(string $name): void
 {
     if ($name === '' || !preg_match('/^[\w-]+\.jpg$/', $name)) return;
     $pdo = db();
-    $st = $pdo->prepare('SELECT (SELECT COUNT(*) FROM items WHERE photo = ?) + (SELECT COUNT(*) FROM settings WHERE value = ? AND key IN (\'logo\',\'cover\'))');
+    $st = $pdo->prepare('SELECT (SELECT COUNT(*) FROM items WHERE photo = ?) + (SELECT COUNT(*) FROM settings WHERE value = ? AND key IN (\'logo\',\'cover\',\'hero\'))');
     $st->execute([$name, $name]);
     if ((int)$st->fetchColumn() > 0) return;
     @unlink(UPLOAD_DIR . '/' . $name);

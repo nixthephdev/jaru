@@ -16,7 +16,11 @@ RedirectMatch 404 ^/?(.*/)?(data|inc)(/|$)
   RewriteRule ^ https://jarucafe.shop%{REQUEST_URI} [R=301,L]
   RewriteCond %{HTTP_HOST} ^www\.jarucafe\.shop$ [NC]
   RewriteRule ^ https://jarucafe.shop%{REQUEST_URI} [R=301,L]
+
+  # Clean page URLs: /menu (the QR code target), /about, /visit.
+  RewriteRule ^(menu|about|visit)/?$ $1.php [L]
 </IfModule>
+Options -MultiViews
 
 # PHP pages send their own security headers (inc/bootstrap.php); these cover static files.
 <IfModule mod_headers.c>

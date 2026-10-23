@@ -3,11 +3,10 @@
   var $ = function (s, el) { return (el || document).querySelector(s); };
   var $$ = function (s, el) { return [].slice.call((el || document).querySelectorAll(s)); };
   var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var pc = matchMedia('(min-width: 1024px)'); // categories are a sidebar, not a sticky top bar
 
   var bar = $('.bar'), q = $('#q'), pop = $('#sig'), toTop = $('#top');
   var items = $$('.item'), sections = $$('.pop, .cat'), links = $$('.cats a');
-  function pad() { document.documentElement.style.scrollPaddingTop = (pc.matches ? 16 : bar.offsetHeight + 8) + 'px'; }
+  function pad() { document.documentElement.style.scrollPaddingTop = bar.offsetHeight + 8 + 'px'; }
   pad();
 
   // ---------- search: name, description, category; highlights matches ----------
@@ -41,13 +40,13 @@
     links.forEach(function (a) {
       var on = a.getAttribute('href') === '#' + id;
       a.classList.toggle('on', on);
-      // Phones/tablets: keep the active tab visible. Scroll only the tab row (scrollIntoView would move the page).
-      if (on && !pc.matches) a.parentNode.scrollTo({ left: a.offsetLeft - 16, behavior: calm ? 'auto' : 'smooth' });
+      // Keep the active tab visible. Scroll only the tab row (scrollIntoView would move the page).
+      if (on) a.parentNode.scrollTo({ left: a.offsetLeft - 16, behavior: calm ? 'auto' : 'smooth' });
     });
   }
   function onScroll() {
     ticking = false;
-    var line = pc.matches ? 160 : bar.getBoundingClientRect().bottom + 24, id = '';
+    var line = bar.getBoundingClientRect().bottom + 24, id = '';
     sections.forEach(function (s) { if (!s.hidden && s.getBoundingClientRect().top <= line) id = s.id; });
     if (!id && sections[0] && !sections[0].hidden) id = sections[0].id;
     if (id !== current) { current = id; mark(id); }
@@ -141,7 +140,5 @@
   sheet.addEventListener('pointerup', endSwipe);
   sheet.addEventListener('pointercancel', endSwipe);
 
-  // ---------- offline ----------
   if (!navigator.onLine) $('#offline').hidden = false;
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
 })();

@@ -1,8 +1,9 @@
 <?php
 require __DIR__ . '/../inc/admin.php';
 
-$url = setting('site_url') ?: 'https://jarucafe.shop/';
-$short = preg_replace('~^https?://(www\.)?|/$~', '', $url);
+// The QR opens the Menu page, not the home page: people scanning at a table want the menu.
+$url = rtrim(setting('site_url') ?: 'https://jarucafe.shop/', '/') . '/menu';
+$short = preg_replace('~^https?://(www\.)?~', '', $url);
 $layouts = [1 => 'Counter standee (1 per page)', 4 => 'Tables (4 per A4)', 8 => 'Small (8 per A4)'];
 $n = (int)($_GET['n'] ?? 4);
 if (!isset($layouts[$n])) $n = 4;

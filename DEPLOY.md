@@ -15,6 +15,11 @@
 5. **Right away**, open `https://jarucafe.shop/admin/` and create the owner password.
    Until a password is set, the first person to open that page can set one.
 
+## Fill in the website details
+Admin › **Settings**: opening hours, phone, Instagram, "Our story", and the home page and café photos.
+Anything left empty is hidden on the site. Pages: `/` (home), `/menu` (where the QR code points), `/about`, `/visit`.
+These short addresses need Apache `mod_rewrite`, which cPanel hosts have on by default.
+
 ## SSL (https)
 1. cPanel › **SSL/TLS Status** › tick `jarucafe.shop` and `www.jarucafe.shop` › **Run AutoSSL**.
 2. Once the padlock shows, `.htaccess` sends all `http://` and `www.` visits to `https://jarucafe.shop`.

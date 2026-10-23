@@ -23,7 +23,7 @@ function admin_top(string $title, string $active = ''): void
   <a class="brand" href="index.php"><?php if ($logo): ?><img src="<?= e(upload_url($logo, true)) ?>" alt="" width="36" height="36"><?php endif ?><span>Jaru admin</span></a>
   <nav>
     <?php foreach ($nav as $href => $label): ?><a href="<?= $href ?>"<?= $active === $href ? ' class="on"' : '' ?>><?= e($label) ?></a><?php endforeach ?>
-    <a href="<?= e(BASE) ?>/" target="_blank" rel="noopener">View menu ↗</a>
+    <a href="<?= e(BASE) ?>/menu" target="_blank" rel="noopener">View menu ↗</a>
   </nav>
 </header>
 <main class="wrap">
