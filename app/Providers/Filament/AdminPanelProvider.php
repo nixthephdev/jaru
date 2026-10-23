@@ -50,7 +50,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandName(fn () => Setting::get('cafe_name') ?: 'Jaru Café')
             ->brandLogo(fn () => Setting::get('logo') ? Photos::url(Setting::get('logo'), small: true) : null)
             ->brandLogoHeight('2.75rem')
-            ->favicon(fn () => Setting::get('logo') ? Photos::url(Setting::get('logo'), small: true) : null)
+            ->favicon(fn () => Setting::get('logo') ? Photos::iconUrl(Setting::get('logo')) : null)
             ->font('Manrope Variable', provider: LocalFontProvider::class)
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([

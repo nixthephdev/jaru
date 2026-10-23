@@ -26,6 +26,59 @@ class Photos
         return asset('uploads/'.rawurlencode($file));
     }
 
+    /**
+     * Round favicon for a photo: <name>_icon.png, 192px, transparent outside the circle.
+     * Made on first use from the small copy, so a logo uploaded before this existed gets one too.
+     * Falls back to the square small copy if GD cannot write it.
+     */
+    public static function iconUrl(string $file): string
+    {
+        if (! preg_match('/^[\w-]+\.jpg$/', $file)) {
+            return '';
+        }
+        $icon = str_replace('.jpg', '_icon.png', $file);
+        $path = self::dir().'/'.$icon;
+        if (! is_file($path) && ! self::makeIcon(self::dir().'/'.str_replace('.jpg', '_sm.jpg', $file), $path)) {
+            return self::url($file, small: true);
+        }
+
+        return asset('uploads/'.rawurlencode($icon));
+    }
+
+    private static function makeIcon(string $from, string $to): bool
+    {
+        $src = is_file($from) && function_exists('imagecreatefromjpeg') ? @imagecreatefromjpeg($from) : false;
+        if (! $src) {
+            return false;
+        }
+        // Draw the centre square at 4x with hard circle edges, then scale down: the downscale smooths the edge.
+        $big = 768;
+        $side = min(imagesx($src), imagesy($src));
+        $sq = imagecreatetruecolor($big, $big);
+        imagealphablending($sq, false);
+        imagesavealpha($sq, true);
+        imagecopyresampled($sq, $src, 0, 0, intdiv(imagesx($src) - $side, 2), intdiv(imagesy($src) - $side, 2), $big, $big, $side, $side);
+        $clear = imagecolorallocatealpha($sq, 0, 0, 0, 127);
+        $r = $big / 2;
+        for ($y = 0; $y < $big; $y++) {
+            for ($x = 0; $x < $big; $x++) {
+                if (($x + 0.5 - $r) ** 2 + ($y + 0.5 - $r) ** 2 > $r * $r) {
+                    imagesetpixel($sq, $x, $y, $clear);
+                }
+            }
+        }
+        $out = imagecreatetruecolor(192, 192);
+        imagealphablending($out, false);
+        imagesavealpha($out, true);
+        imagecopyresampled($out, $sq, 0, 0, 0, 0, 192, 192, $big, $big);
+        $ok = @imagepng($out, $to);
+        imagedestroy($src);
+        imagedestroy($sq);
+        imagedestroy($out);
+
+        return $ok;
+    }
+
     /** Validates, re-encodes with GD and stores both sizes. Returns the file name. */
     public static function save(string $path, string $prefix = ''): string
     {
@@ -79,7 +132,7 @@ class Photos
         return $name;
     }
 
-    /** Deletes a photo and its small copy once nothing references it. */
+    /** Deletes a photo, its small copy and its round icon once nothing references it. */
     public static function delete(?string $name): void
     {
         if (! $name || ! preg_match('/^[\w-]+\.jpg$/', $name)) {
@@ -92,5 +145,6 @@ class Photos
         }
         @unlink(self::dir().'/'.$name);
         @unlink(self::dir().'/'.str_replace('.jpg', '_sm.jpg', $name));
+        @unlink(self::dir().'/'.str_replace('.jpg', '_icon.png', $name));
     }
 }

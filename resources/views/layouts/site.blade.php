@@ -22,7 +22,8 @@
 <meta property="og:url" content="{{ $site.'/'.($active === 'home' ? '' : $active) }}">
 @if ($cover || $logo)<meta property="og:image" content="{{ $site.'/uploads/'.rawurlencode($cover ?: $logo) }}">@endif
 <meta name="twitter:card" content="summary_large_image">
-@if ($logoUrl)<link rel="icon" href="{{ $logoUrl }}"><link rel="apple-touch-icon" href="{{ $logoUrl }}">@endif
+{{-- Browser tab: the round icon. Home screen: the square logo, since iOS rounds it itself and would fill clear corners with black. --}}
+@if ($logoUrl)<link rel="icon" type="image/png" href="{{ \App\Support\Photos::iconUrl($logo) }}"><link rel="apple-touch-icon" href="{{ $logoUrl }}">@endif
 @vite(['resources/css/site.css', 'resources/js/site.js'])
 <noscript><style>.reveal{opacity:1!important;transform:none!important}</style></noscript>
 </head>
@@ -33,7 +34,7 @@
 <header data-site-head class="{{ $active === 'menu' ? 'md:sticky' : 'sticky' }} top-0 z-40 border-b border-line bg-ivory/85 backdrop-blur-xl backdrop-saturate-150">
   <div class="wrap flex h-[4.25rem] items-center justify-between gap-3 md:h-20">
     <a class="flex items-center gap-3 no-underline" href="{{ route('home') }}">
-      @if ($logoUrl)<img src="{{ $logoUrl }}" alt="" width="44" height="44" class="size-10 rounded-full bg-white object-cover ring-1 ring-line md:size-11">@endif
+      @if ($logoUrl)<img src="{{ $logoUrl }}" alt="" width="44" height="44" class="size-10 rounded-full bg-white object-cover ring-1 ring-line md:size-11" style="flex:none">@endif
       <span class="hidden font-display text-[1.35rem] font-[420] tracking-[-0.01em] min-[400px]:inline">{{ $name }}</span>
     </a>
     <nav class="flex items-center gap-0.5 sm:gap-2" aria-label="Main">
@@ -42,6 +43,8 @@
         <a href="{{ url($slug) }}" @if ($on) aria-current="page" @endif
            class="relative px-2.5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.18em] no-underline transition-colors duration-300 sm:px-3 {{ $on ? 'text-ink after:absolute after:inset-x-2.5 after:-bottom-0.5 after:h-px after:bg-olive sm:after:inset-x-3' : 'text-muted hover:text-ink' }}">{{ $label }}</a>
       @endforeach
+      {{-- Staff login: a quiet lock, icon only, so it never competes with the customer links. --}}
+      <a href="{{ url('admin') }}" rel="nofollow" aria-label="Staff login" title="Staff login" class="grid place-items-center rounded-full border border-line text-muted transition-colors hover:text-ink" style="width:2rem;height:2rem;flex:none"><svg class="i" style="width:1rem;height:1rem" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></a>
     </nav>
   </div>
 </header>

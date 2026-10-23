@@ -35,3 +35,6 @@ Thumbs.db
 !/public/uploads/seed-*
 *.zip
 /dbg.txt
+
+# Round favicons are made from the logo on first use
+/public/uploads/*_icon.png
