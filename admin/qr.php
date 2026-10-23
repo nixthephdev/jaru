@@ -24,11 +24,17 @@ admin_top('QR code', 'qr.php');
   <p class="hint">Print tip: choose A4, scale 100%, margins "Default". Test-scan one card before printing many.</p>
 </div>
 
-<div class="sheet n<?= $n ?>" id="sheet" data-url="<?= e($url) ?>" data-short="<?= e($short) ?>" data-logo="<?= e($logo ? upload_url($logo) : '') ?>">
+<?php $chalk = BASE . '/assets/chalk.jpg?v=' . filemtime(ROOT . '/assets/chalk.jpg'); ?>
+<div class="sheet n<?= $n ?>" id="sheet" style="--chalk-art:url('<?= e($chalk) ?>')"
+     data-url="<?= e($url) ?>" data-short="<?= e($short) ?>" data-name="<?= e(setting('cafe_name')) ?>"
+     data-logo="<?= e($logo ? upload_url($logo) : '') ?>" data-chalk="<?= e($chalk) ?>">
   <?php for ($i = 0; $i < $n; $i++): ?>
   <div class="qr-card">
-    <?php if ($logo): ?><img src="<?= e(upload_url($logo)) ?>" alt="Jaru Café" class="qr-logo"><?php endif ?>
-    <div class="qr"></div>
+    <p class="qr-kicker"><?= e(setting('cafe_name')) ?></p>
+    <div class="qr-box">
+      <div class="qr"></div>
+      <?php if ($logo): ?><img src="<?= e(upload_url($logo, true)) ?>" alt="" class="qr-logo"><?php endif ?>
+    </div>
     <p class="qr-cta">Scan to see our menu</p>
     <p class="qr-url"><?= e($short) ?></p>
   </div>

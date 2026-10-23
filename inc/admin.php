@@ -16,14 +16,20 @@ function admin_top(string $title, string $active = ''): void
 <meta name="robots" content="noindex">
 <title><?= e($title) ?> · Jaru admin</title>
 <?php if ($logo): ?><link rel="icon" href="<?= e(upload_url($logo, true)) ?>"><?php endif ?>
+<?php admin_fonts() ?>
 <link rel="stylesheet" href="<?= e($css) ?>">
 </head>
-<body>
-<header class="top">
-  <a class="brand" href="index.php"><?php if ($logo): ?><img src="<?= e(upload_url($logo, true)) ?>" alt="" width="36" height="36"><?php endif ?><span>Jaru admin</span></a>
-  <nav>
+<body style="--chalk-art:url('<?= e(BASE . '/assets/chalk.jpg?v=' . filemtime(ROOT . '/assets/chalk.jpg')) ?>')">
+<header class="top chalk">
+  <div class="top-in">
+    <a class="brand" href="index.php">
+      <?php if ($logo): ?><img src="<?= e(upload_url($logo, true)) ?>" alt="" width="42" height="42"><?php endif ?>
+      <span><b><?= e(setting('cafe_name')) ?></b><small>Menu editor</small></span>
+    </a>
+    <a class="view" href="<?= e(BASE) ?>/" target="_blank" rel="noopener">View site ↗</a>
+  </div>
+  <nav class="tabs">
     <?php foreach ($nav as $href => $label): ?><a href="<?= $href ?>"<?= $active === $href ? ' class="on"' : '' ?>><?= e($label) ?></a><?php endforeach ?>
-    <a href="<?= e(BASE) ?>/menu" target="_blank" rel="noopener">View menu ↗</a>
   </nav>
 </header>
 <main class="wrap">
@@ -33,6 +39,13 @@ function admin_top(string $title, string $active = ''): void
     if (!is_writable(UPLOAD_DIR)) $problems[] = 'The <b>uploads/</b> folder is not writable, so photos cannot be uploaded.';
     foreach ($problems as $p) echo '<p class="alert bad">' . $p . ' Ask your web host to set folder permissions to 755.</p>';
     if ($m = flash()) echo '<p class="alert ' . ($m[1] === 'bad' ? 'bad" role="alert"' : 'ok" role="status"') . '>' . e($m[0]) . '</p>';
+}
+
+/** Same fonts as the public website. */
+function admin_fonts(): void
+{
+    echo '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+        . '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Fraunces:opsz,wght@9..144,600&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap">' . "\n";
 }
 
 function admin_bottom(bool $js = true): void

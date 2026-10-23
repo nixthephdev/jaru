@@ -48,11 +48,14 @@ $logo = setting('logo');
 <meta name="robots" content="noindex">
 <title>Log in · Jaru admin</title>
 <?php if ($logo): ?><link rel="icon" href="<?= e(upload_url($logo, true)) ?>"><?php endif ?>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Fraunces:opsz,wght@9..144,600&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap">
 <link rel="stylesheet" href="<?= e(BASE . '/assets/admin.css?v=' . filemtime(ROOT . '/assets/admin.css')) ?>">
 </head>
-<body class="login">
+<body class="login chalk" style="--chalk-art:url('<?= e(BASE . '/assets/chalk.jpg?v=' . filemtime(ROOT . '/assets/chalk.jpg')) ?>')">
 <form method="post" class="card narrow">
   <?php if ($logo): ?><img src="<?= e(upload_url($logo, true)) ?>" alt="Jaru Café" width="96" height="96" class="login-logo"><?php endif ?>
+  <p class="script"><?= e(setting('cafe_name')) ?></p>
   <h1><?= $firstRun ? 'Create your admin password' : 'Menu editor' ?></h1>
   <?php if ($firstRun): ?><p class="hint">First time here. Pick a password only you know (at least 8 characters).</p><?php endif ?>
   <?php if ($error): ?><p class="alert bad" role="alert"><?= e($error) ?></p><?php endif ?>

@@ -97,50 +97,70 @@
   // ---------- QR cards ----------
   var sheet = document.getElementById('sheet');
   if (sheet && window.qrcode) {
-    var qr = qrcode(0, 'M');
+    var INK = '#2b1d0b', PANEL = '#fffaf0';
+    // Level H (30% recovery) so the logo covering the middle doesn't stop phones reading it.
+    var qr = qrcode(0, 'H');
     qr.addData(sheet.dataset.url);
     qr.make();
     var n = qr.getModuleCount(), d = '';
     for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (qr.isDark(r, c)) d += 'M' + c + ' ' + r + 'h1v1h-1z';
-    var q = n + 8; // 4-module quiet zone each side
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 ' + q + ' ' + q + '" shape-rendering="crispEdges" role="img" aria-label="QR code to ' +
-      sheet.dataset.url.replace(/[<>"&]/g, '') + '"><rect x="-4" y="-4" width="' + q + '" height="' + q + '" fill="#fff"/><path fill="#000" d="' + d + '"/></svg>';
+    var q = n + 4; // 2-module quiet zone; the cream panel padding adds the rest
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 ' + q + ' ' + q + '" shape-rendering="crispEdges" role="img" aria-label="QR code to ' +
+      sheet.dataset.url.replace(/[<>"&]/g, '') + '"><rect x="-2" y="-2" width="' + q + '" height="' + q + '" fill="' + PANEL + '"/><path fill="' + INK + '" d="' + d + '"/></svg>';
     sheet.querySelectorAll('.qr').forEach(function (el) { el.innerHTML = svg; });
 
     document.getElementById('print').addEventListener('click', function () { window.print(); });
 
-    document.getElementById('png').addEventListener('click', function () {
-      var W = 1800, H = 2400, cell = Math.floor(1400 / q);
-      var cv = document.createElement('canvas');
-      cv.width = W; cv.height = H;
-      var x = cv.getContext('2d');
-      x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H);
-      x.fillStyle = '#363215'; x.fillRect(0, 0, W, 24); x.fillRect(0, H - 24, W, 24);
+    function load(src) {
+      return new Promise(function (ok) { var i = new Image(); i.onload = function () { ok(i); }; i.onerror = function () { ok(null); }; i.src = src; });
+    }
+    function roundRect(x, X, Y, w, h, rad) {
+      x.beginPath(); x.moveTo(X + rad, Y); x.arcTo(X + w, Y, X + w, Y + h, rad); x.arcTo(X + w, Y + h, X, Y + h, rad);
+      x.arcTo(X, Y + h, X, Y, rad); x.arcTo(X, Y, X + w, Y, rad); x.closePath();
+    }
 
-      function finish() {
-        var size = cell * q, ox = (W - size) / 2, oy = 560;
-        x.fillStyle = '#000';
-        for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (qr.isDark(r, c)) x.fillRect(ox + (c + 4) * cell, oy + (r + 4) * cell, cell, cell);
-        x.textAlign = 'center';
-        x.fillStyle = '#363215';
-        x.font = 'bold 110px Outfit, system-ui, sans-serif';
-        x.fillText('Scan to see our menu', W / 2, oy + size + 150);
-        x.fillStyle = '#5c5d26';
-        x.font = '600 96px Outfit, system-ui, sans-serif';
-        x.fillText(sheet.dataset.short, W / 2, oy + size + 290);
-        cv.toBlob(function (b) {
-          var a = document.createElement('a');
-          a.href = URL.createObjectURL(b);
-          a.download = 'jaru-menu-qr.png';
-          document.body.appendChild(a); a.click(); a.remove();
-          setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
-        }, 'image/png');
-      }
-      if (!sheet.dataset.logo) return finish();
-      var logo = new Image();
-      logo.onload = function () { x.drawImage(logo, (W - 520) / 2, 40, 520, 520); finish(); };
-      logo.onerror = finish;
-      logo.src = sheet.dataset.logo;
+    // High-resolution PNG (1800 x 2600) for print shops, same design as the cards.
+    document.getElementById('png').addEventListener('click', function () {
+      var W = 1800, H = 2600;
+      var fonts = ['700 150px Caveat', '600 120px Fraunces', '700 84px "Nunito Sans"'];
+      Promise.all([load(sheet.dataset.chalk), load(sheet.dataset.logo || ''), document.fonts ? Promise.all(fonts.map(function (f) { return document.fonts.load(f); })).catch(function () {}) : null])
+        .then(function (res) {
+          var chalk = res[0], logo = res[1];
+          var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+          var x = cv.getContext('2d');
+          x.fillStyle = '#37230a'; x.fillRect(0, 0, W, H);
+          if (chalk) { // cover-fit the chalk art, dimmed like the website
+            var s = Math.max(W / chalk.width, H / chalk.height), cw = chalk.width * s, ch = chalk.height * s;
+            x.globalAlpha = .35; x.drawImage(chalk, (W - cw) / 2, (H - ch) / 2, cw, ch); x.globalAlpha = 1;
+          }
+          x.textAlign = 'center';
+          x.fillStyle = '#e3c98f'; x.font = '700 150px Caveat, cursive';
+          x.fillText(sheet.dataset.name, W / 2, 330);
+
+          var P = 1300, px = (W - P) / 2, py = 430, pad = 50, cell = Math.floor((P - pad * 2) / q), ox = px + (P - cell * q) / 2, oy = py + (P - cell * q) / 2;
+          x.save(); x.shadowColor = 'rgba(0,0,0,.45)'; x.shadowBlur = 60; x.shadowOffsetY = 20;
+          x.fillStyle = PANEL; roundRect(x, px, py, P, P, 70); x.fill(); x.restore();
+          x.fillStyle = INK;
+          for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (qr.isDark(r, c)) x.fillRect(ox + (c + 2) * cell, oy + (r + 2) * cell, cell, cell);
+          if (logo) {
+            var L = Math.round(cell * n * .22), cx = W / 2, cy = py + P / 2;
+            x.fillStyle = PANEL; x.beginPath(); x.arc(cx, cy, L / 2 + 22, 0, Math.PI * 2); x.fill();
+            x.save(); x.beginPath(); x.arc(cx, cy, L / 2, 0, Math.PI * 2); x.clip();
+            x.fillStyle = '#fff'; x.fillRect(cx - L / 2, cy - L / 2, L, L);
+            x.drawImage(logo, cx - L / 2, cy - L / 2, L, L); x.restore();
+          }
+          x.fillStyle = '#f3ead6'; x.font = '600 120px Fraunces, Georgia, serif';
+          x.fillText('Scan to see our menu', W / 2, py + P + 220);
+          x.fillStyle = '#e3c98f'; x.font = '700 84px "Nunito Sans", system-ui, sans-serif';
+          x.fillText(sheet.dataset.short, W / 2, py + P + 350);
+          cv.toBlob(function (b) {
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(b);
+            a.download = 'jaru-menu-qr.png';
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+          }, 'image/png');
+        });
     });
   }
 })();
