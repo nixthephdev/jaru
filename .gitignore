@@ -1,0 +1,6 @@
+# Live data: menu database (has the admin password hash) and owner uploads.
+data/*.sqlite*
+uploads/*
+!uploads/.htaccess
+!uploads/seed-*
+*.zip
