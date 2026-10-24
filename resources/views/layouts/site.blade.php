@@ -1,29 +1,48 @@
 @php
     $name = setting('cafe_name');
-    $site = rtrim(setting('site_url') ?: 'https://jarucafe.shop/', '/');
+    $site = \App\Support\Seo::site();
+    $city = \App\Support\Seo::city();
     $logo = setting('logo');
     $cover = setting('cover');
-    $pageTitle = ($title ?? '') === '' ? "$name · ".setting('tagline') : "$title · $name";
-    $desc = ($description ?? '') ?: setting('tagline').' · '.$name.', '.setting('address');
+    // Titles carry the town, since most people search "café in Naga City" rather than the name.
+    $pageTitle = ($title ?? '') === ''
+        ? $name.' · Coffee & matcha café'.($city !== '' ? " in $city" : '')
+        : "$title · $name".($city !== '' ? ", $city" : '');
+    // Google shows about 160 characters, so lead with who, where and what.
+    $desc = ($description ?? '') ?: $name.($city !== '' ? ", $city" : '').': '.(setting_lines('about_text')[1] ?? '').' '.setting('tagline').'.';
+    $desc = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', $desc)), 160);
+    $canonical = $site.'/'.($active === 'home' ? '' : $active);
+    $share = $cover ?: $logo;
     $nav = ['' => 'Home', 'menu' => 'Menu', 'about' => 'About', 'visit' => 'Visit'];
     $logoUrl = $logo ? \App\Support\Photos::url($logo, small: true) : '';
+    $gaId = \App\Support\Seo::analyticsId(setting('ga_id'));
+    $verify = \App\Support\Seo::verificationCode(setting('google_verification'));
 @endphp
 <!doctype html>
-<html lang="en" class="js">
+<html lang="en-PH" class="js">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{{ $pageTitle }}</title>
 <meta name="description" content="{{ $desc }}">
+<link rel="canonical" href="{{ $canonical }}">
 <meta name="theme-color" content="#f8f5ef">
+@if ($verify)<meta name="google-site-verification" content="{{ $verify }}">@endif
 <meta property="og:type" content="website">
-<meta property="og:title" content="{{ ($title ?? '') === '' ? $name : $pageTitle }}">
+<meta property="og:site_name" content="{{ $name }}">
+<meta property="og:locale" content="en_PH">
+<meta property="og:title" content="{{ $pageTitle }}">
 <meta property="og:description" content="{{ $desc }}">
-<meta property="og:url" content="{{ $site.'/'.($active === 'home' ? '' : $active) }}">
-@if ($cover || $logo)<meta property="og:image" content="{{ $site.'/uploads/'.rawurlencode($cover ?: $logo) }}">@endif
+<meta property="og:url" content="{{ $canonical }}">
+@if ($share)<meta property="og:image" content="{{ \App\Support\Photos::url($share) }}"><meta property="og:image:alt" content="Inside {{ $name }}{{ $city !== '' ? ", $city" : '' }}">@endif
 <meta name="twitter:card" content="summary_large_image">
 {{-- Browser tab: the round icon. Home screen: the square logo, since iOS rounds it itself and would fill clear corners with black. --}}
 @if ($logoUrl)<link rel="icon" type="image/png" href="{{ \App\Support\Photos::iconUrl($logo) }}"><link rel="apple-touch-icon" href="{{ $logoUrl }}">@endif
+{{-- What Google reads to show the café in Search and Maps: address, hours, phone, menu link. --}}
+{!! \App\Support\Seo::jsonLd(\App\Support\Seo::business()) !!}
+@stack('head')
+{{-- Google Analytics, only once the owner adds an ID in Settings (site.js starts it; the CSP allows Google only then). --}}
+@if ($gaId)<meta name="ga-id" content="{{ $gaId }}"><script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>@endif
 @vite(['resources/css/site.css', 'resources/js/site.js'])
 <noscript><style>.reveal{opacity:1!important;transform:none!important}</style></noscript>
 </head>
@@ -94,7 +113,7 @@
   </div>
   <div class="border-t border-ivory/10">
     <div class="wrap flex flex-wrap items-center justify-between gap-3 py-6 text-xs tracking-wide text-ivory/50">
-      <p>© {{ date('Y') }} {{ $name }} · Naga City</p>
+      <p>© {{ date('Y') }} {{ $name }} · Naga City · <a class="underline-offset-4 hover:text-ivory hover:underline" href="{{ url('privacy') }}">Privacy</a></p>
       <nav class="flex gap-6 uppercase tracking-[0.18em]" aria-label="Footer"><a class="hover:text-ivory" href="{{ url('menu') }}">Menu</a><a class="hover:text-ivory" href="{{ url('about') }}">About</a><a class="hover:text-ivory" href="{{ url('visit') }}">Visit</a><a class="inline-flex items-center gap-1.5 hover:text-ivory" href="{{ url('admin') }}" rel="nofollow"><svg class="i" style="width:.85rem;height:.85rem" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Staff</a></nav>
     </div>
   </div>

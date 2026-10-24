@@ -1,5 +1,5 @@
 @php $story = setting_lines('about_text'); $cover = setting('cover'); $second = setting('hero'); @endphp
-@extends('layouts.site', ['title' => 'About', 'active' => 'about', 'description' => $story[0] ?? ''])
+@extends('layouts.site', ['title' => 'Our story', 'active' => 'about', 'description' => implode(' ', array_slice($story, 0, 2))])
 
 @section('content')
 <main>
@@ -11,7 +11,7 @@
       <span class="arch-echo" aria-hidden="true"></span>
       <div class="arch relative aspect-[4/5] bg-sand shadow-lift">
         @if ($cover)
-        <img class="size-full object-cover" src="{{ \App\Support\Photos::url($cover) }}" alt="Inside {{ setting('cafe_name') }}" width="1200" height="1500">
+        <img class="size-full object-cover" src="{{ \App\Support\Photos::url($cover) }}" alt="Inside {{ setting('cafe_name') }}, a café in {{ \App\Support\Seo::city() }}" width="1200" height="1500">
         @else
         <x-photo-placeholder label="Photo coming soon" />
         @endif
@@ -31,7 +31,7 @@
 
   @if ($second && $second !== $cover)
   <div class="wrap reveal mt-24 md:mt-32">
-    <img class="aspect-[16/10] w-full rounded-[1.5rem] bg-sand object-cover md:aspect-[21/9]" src="{{ \App\Support\Photos::url($second) }}" alt="The counter at {{ setting('cafe_name') }}" loading="lazy" width="1200" height="750">
+    <img class="aspect-[16/10] w-full rounded-[1.5rem] bg-sand object-cover md:aspect-[21/9]" src="{{ \App\Support\Photos::url($second) }}" alt="The counter at {{ setting('cafe_name') }}, {{ \App\Support\Seo::city() }}" loading="lazy" width="1200" height="750">
   </div>
   @endif
 
@@ -50,7 +50,7 @@
       <li>
         <a class="group block no-underline" href="{{ url('menu') }}#i{{ $p->id }}">
           <span class="block aspect-square overflow-hidden rounded-[1.25rem] bg-sand">
-            <img class="size-full object-cover transition duration-[1.2s] group-hover:scale-[1.04]" src="{{ $p->photoUrl(true) }}" alt="" loading="lazy" decoding="async" width="480" height="480">
+            <img class="size-full object-cover transition duration-[1.2s] group-hover:scale-[1.04]" src="{{ $p->photoUrl(true) }}" alt="{{ \App\Support\Seo::dishAlt($p->name) }}" loading="lazy" decoding="async" width="480" height="480">
           </span>
           <span class="mt-3 block text-[0.66rem] font-bold uppercase tracking-[0.2em] text-muted">{{ $p->category->name }}</span>
           <span class="mt-0.5 block font-display text-lg leading-tight transition-colors group-hover:text-olive md:text-xl">{{ $p->name }}</span>

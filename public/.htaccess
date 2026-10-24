@@ -1,12 +1,13 @@
-# Force HTTPS on the live domain only (local testing is untouched).
+# Force HTTPS on the live domain only (local testing is untouched). The root .htaccess does this first;
+# this copy covers a host whose document root is public/. $1 is the path without public/.
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteCond %{HTTPS} off
     RewriteCond %{HTTP:X-Forwarded-Proto} !https
     RewriteCond %{HTTP_HOST} ^(www\.)?jarucafe\.shop$ [NC]
-    RewriteRule ^ https://jarucafe.shop%{REQUEST_URI} [R=301,L]
+    RewriteRule ^(.*)$ https://jarucafe.shop/$1 [R=301,L]
     RewriteCond %{HTTP_HOST} ^www\.jarucafe\.shop$ [NC]
-    RewriteRule ^ https://jarucafe.shop%{REQUEST_URI} [R=301,L]
+    RewriteRule ^(.*)$ https://jarucafe.shop/$1 [R=301,L]
 </IfModule>
 
 # Static files: cache for a week (built assets are versioned by name), but never the service worker.
@@ -38,6 +39,17 @@
     # Handle X-XSRF-Token Header
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Live domain: one clean address per page. The root .htaccess rewrites everything into public/, and on
+    # LiteSpeed %{REQUEST_URI} then includes public/, so build targets from $1 and THE_REQUEST instead.
+    # "/public/menu" typed by someone goes to "/menu" (THE_REQUEST is the original request line).
+    RewriteCond %{HTTP_HOST} ^jarucafe\.shop$ [NC]
+    RewriteCond %{THE_REQUEST} \s/public/([^\s?]*) [NC]
+    RewriteRule ^ https://jarucafe.shop/%1 [R=301,L]
+    # "/menu/" goes to "/menu".
+    RewriteCond %{HTTP_HOST} ^jarucafe\.shop$ [NC]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.+)/$ https://jarucafe.shop/$1 [R=301,L]
 
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d

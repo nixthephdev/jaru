@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Item;
 use App\Support\Money;
+use App\Support\Seo;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 
 class SiteController extends Controller
 {
@@ -63,5 +66,22 @@ class SiteController extends Controller
     public function visit(): View
     {
         return view('visit');
+    }
+
+    /** The public pages for search engines, dated by the last menu change. */
+    public function sitemap(): Response
+    {
+        $site = Seo::site();
+        $last = collect([Item::max('updated_at'), Category::max('updated_at')])->filter()->max();
+        $date = $last ? Carbon::parse($last)->toDateString() : now()->toDateString();
+        $pages = ['/' => '1.0', '/menu' => '0.9', '/visit' => '0.8', '/about' => '0.6', '/privacy' => '0.2'];
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n".'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
+        foreach ($pages as $path => $priority) {
+            $xml .= '  <url><loc>'.e($site.$path).'</loc>'
+                ."<lastmod>$date</lastmod><priority>$priority</priority></url>\n";
+        }
+
+        return response($xml.'</urlset>'."\n", 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
     }
 }

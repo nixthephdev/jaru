@@ -2,6 +2,17 @@
 # Every request is rewritten into public/, so .env, app/, vendor/ and database/ can never be downloaded.
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  # One address for Google: http:// and www. go to https://jarucafe.shop, before anything is rewritten into public/.
+  # ($1 is the path as typed; %{REQUEST_URI} can already include public/ on LiteSpeed.)
+  RewriteCond %{HTTPS} off
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteCond %{HTTP_HOST} ^(www\.)?jarucafe\.shop$ [NC]
+  RewriteRule ^(.*)$ https://jarucafe.shop/$1 [R=301,L]
+  RewriteCond %{HTTP_HOST} ^www\.jarucafe\.shop$ [NC]
+  RewriteRule ^(.*)$ https://jarucafe.shop/$1 [R=301,L]
+
+  # (Addresses typed with /public/ are redirected in public/.htaccess, the file the server reads for them.)
   RewriteRule ^$ public/ [L]
   RewriteCond %{REQUEST_URI} !^/public/
   RewriteRule ^(.*)$ public/$1 [L]

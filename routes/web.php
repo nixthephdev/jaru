@@ -8,4 +8,7 @@ Route::controller(SiteController::class)->middleware('site.headers')->group(func
     Route::get('/menu', 'menu')->name('menu'); // the QR code points here
     Route::get('/about', 'about')->name('about');
     Route::get('/visit', 'visit')->name('visit');
+    Route::view('/privacy', 'privacy')->name('privacy');
 });
+
+Route::get('/sitemap.xml', [SiteController::class, 'sitemap'])->name('sitemap');

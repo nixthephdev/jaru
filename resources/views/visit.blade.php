@@ -5,7 +5,8 @@
     // "Sunday – Thursday: 10 AM – 10 PM" becomes a day column and a time column; lines without a colon span both.
     $rows = array_map(fn ($h) => str_contains($h, ': ') ? explode(': ', $h, 2) : [$h, null], $hours);
 @endphp
-@extends('layouts.site', ['title' => 'Visit', 'active' => 'visit', 'description' => 'Find '.setting('cafe_name').' at '.setting('address').'. Opening hours, directions and contact.'])
+@extends('layouts.site', ['title' => 'Hours & directions', 'active' => 'visit', 'description' => 'Find '.setting('cafe_name').' at '.setting('address')
+    .(setting('landmark') ? ' ('.setting('landmark').')' : '').'. Opening hours: '.implode('; ', $hours).'. Directions, phone and contact.'])
 
 @section('content')
 <main>

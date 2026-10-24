@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Setting;
+use App\Support\Seo;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Vite;
@@ -19,8 +21,11 @@ class SiteHeaders
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Cache-Control', 'no-cache');
         if (! Vite::isRunningHot()) {
-            $response->headers->set('Content-Security-Policy', "default-src 'self'; img-src 'self' data: blob:; "
-                ."style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self'; connect-src 'self'; "
+            // Google Analytics hosts are allowed only once the owner has added an ID in Settings.
+            $ga = Seo::analyticsId(Setting::get('ga_id')) !== ''
+                ? ' https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com' : '';
+            $response->headers->set('Content-Security-Policy', "default-src 'self'; img-src 'self' data: blob:$ga; "
+                ."style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self'$ga; connect-src 'self'$ga; "
                 ."manifest-src 'self'; worker-src 'self'; frame-src https://www.google.com; "
                 ."frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
         }

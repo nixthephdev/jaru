@@ -5,7 +5,16 @@ import MenuApp from './MenuApp.vue';
 const mount = document.getElementById('menu-app');
 if (mount) {
     const cats = JSON.parse(document.getElementById('menu-data').textContent);
-    createApp(MenuApp, { cats }).mount(mount);
+    createApp(MenuApp, { cats, altSuffix: mount.dataset.altSuffix || '' }).mount(mount);
+}
+
+// Google Analytics, only when the owner has set an ID in Settings (the page then carries <meta name="ga-id">).
+const ga = document.querySelector('meta[name="ga-id"]')?.content;
+if (ga) {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('js', new Date());
+    window.gtag('config', ga);
 }
 
 // Sections ease in as they scroll into view.

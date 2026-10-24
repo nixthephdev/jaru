@@ -1,7 +1,9 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
-const props = defineProps({ cats: { type: Array, required: true } });
+// altSuffix: "at Jaru Café, Naga City", appended to dish names for photo alt text.
+const props = defineProps({ cats: { type: Array, required: true }, altSuffix: { type: String, default: '' } });
+const alt = (item) => (item.name + ' ' + props.altSuffix).trim();
 
 const query = ref('');
 const online = ref(navigator.onLine);
@@ -174,7 +176,7 @@ onBeforeUnmount(() => {
                     <li v-for="i in c.items" :id="'i' + i.id" :key="i.id">
                         <button type="button" class="group flex w-full items-start gap-4 border-b border-line py-5 text-left sm:gap-5" :aria-label="i.name + ', details'" @click="openItem(i, c)">
                             <span class="block size-[4.5rem] flex-none overflow-hidden rounded-2xl bg-sand sm:size-20" :class="soldOut(i, c) && 'opacity-50 grayscale'">
-                                <img v-if="i.photo" :src="i.photoSm" alt="" loading="lazy" decoding="async" width="480" height="480" class="size-full object-cover transition duration-700 group-hover:scale-105" />
+                                <img v-if="i.photo" :src="i.photoSm" :alt="alt(i)" loading="lazy" decoding="async" width="480" height="480" class="size-full object-cover transition duration-700 group-hover:scale-105" />
                                 <span v-else class="grid size-full place-items-center text-olive/50" aria-hidden="true">
                                     <svg class="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h11v4a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5v-4z" /><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16" /><path d="M9 3.5c-1 1.4 1 2.6 0 4M13 3.5c-1 1.4 1 2.6 0 4" /></svg>
                                 </span>
@@ -235,7 +237,7 @@ onBeforeUnmount(() => {
                 <div class="relative mx-auto mt-8 w-64 max-w-[64%]">
                     <span class="arch-echo" aria-hidden="true"></span>
                     <div class="arch relative aspect-[4/5] bg-sand">
-                        <img v-if="open.item.photo" :src="open.item.photoFull" :alt="open.item.name" class="size-full object-cover" />
+                        <img v-if="open.item.photo" :src="open.item.photoFull" :alt="alt(open.item)" class="size-full object-cover" />
                         <span v-else class="flex size-full flex-col items-center justify-center gap-3 text-olive/55" role="img" aria-label="Photo coming soon">
                             <svg class="size-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 10h11v4a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5v-4z" /><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16" /><path d="M9 3.5c-1 1.4 1 2.6 0 4M13 3.5c-1 1.4 1 2.6 0 4" /></svg>
                             <span class="text-[0.66rem] font-bold uppercase tracking-[0.22em] text-muted">Photo coming soon</span>

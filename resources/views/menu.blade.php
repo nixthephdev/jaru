@@ -1,4 +1,9 @@
-@extends('layouts.site', ['title' => 'Menu', 'active' => 'menu', 'description' => 'Menu of '.setting('cafe_name').', '.setting('address').'. Coffee, matcha, non-coffee drinks, meals and cakes.'])
+@extends('layouts.site', ['title' => 'Menu', 'active' => 'menu', 'description' => 'The menu at '.setting('cafe_name').', '.setting('address').': '
+    .mb_strtolower(implode(', ', $cats->where('status', 'active')->pluck('name')->all())).'. Photos, prices and what is new.'])
+
+@push('head')
+{!! \App\Support\Seo::jsonLd(\App\Support\Seo::menu($cats)) !!}
+@endpush
 
 @section('content')
 <main>
@@ -15,7 +20,7 @@
   <script type="application/json" id="menu-data">@json($menu)</script>
 
   {{-- Plain list for Google and slow connections; the Vue menu replaces it once it loads. --}}
-  <div id="menu-app">
+  <div id="menu-app" data-alt-suffix="{{ \App\Support\Seo::dishAlt('') }}">
     <div class="wrap pb-16">
       @foreach ($cats as $c)
       <section class="mt-10" id="c{{ $c->id }}">

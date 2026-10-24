@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Activity;
 use App\Models\Setting;
 use App\Support\Photos;
+use App\Support\Seo;
 use BackedEnum;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
@@ -34,7 +35,7 @@ class Settings extends Page
     public ?array $data = [];
 
     private const TEXT_KEYS = ['cafe_name', 'tagline', 'address', 'landmark', 'map_query', 'hours', 'phone', 'email',
-        'facebook', 'instagram', 'about_text', 'site_url'];
+        'facebook', 'instagram', 'about_text', 'site_url', 'ga_id', 'google_verification'];
 
     public function mount(): void
     {
@@ -77,6 +78,24 @@ class Settings extends Page
                         $link('facebook', 'Facebook page link'),
                         $link('instagram', 'Instagram link'),
                         $link('site_url', 'Website address')->helperText('Used for the QR code and link previews.')->columnSpanFull(),
+                    ]),
+                Section::make('Google')
+                    ->description('Optional. Leave empty and nothing from Google is loaded on the website.')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('ga_id')
+                            ->label('Google Analytics ID')
+                            ->placeholder('G-XXXXXXXXXX')
+                            ->regex('/^\s*G-[A-Z0-9]{4,12}\s*$/i')
+                            ->validationMessages(['regex' => 'This should look like G-ABC123XYZ (Analytics › Admin › Data streams).'])
+                            ->helperText('Counts visitors. Find it in Google Analytics › Admin › Data streams.')
+                            ->maxLength(40),
+                        TextInput::make('google_verification')
+                            ->label('Google Search Console code')
+                            ->helperText('Proves to Google you own the site. Paste the code or the whole <meta> tag from Search Console (HTML tag method).')
+                            ->rule(fn () => fn (string $attribute, $value, $fail) => filled($value) && Seo::verificationCode($value) === ''
+                                ? $fail('Paste the code from Search Console, or the whole <meta name="google-site-verification" …> tag.') : null)
+                            ->maxLength(300),
                     ]),
                 Section::make('Photos')
                     ->columns(3)
